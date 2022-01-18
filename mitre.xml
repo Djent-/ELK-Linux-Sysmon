@@ -1,0 +1,535 @@
+<!--
+    SysmonForLinux
+
+    Copyright (c) Microsoft Corporation
+
+    All rights reserved.
+
+    MIT License
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the ""Software""), to deal in the Software without
+ restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom th
+e Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+ AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISI
+NG FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-->
+<Sysmon schemaversion="4.81">
+  <EventFiltering>
+    <!-- Event ID 1 == ProcessCreate -->
+    <RuleGroup name="" groupRelation="or">
+      <ProcessCreate onmatch="include">
+        <Rule name="TechniqueID=T1021.004,TechniqueName=Remote Services: SSH" groupRelation="and">
+          <Image condition="end with">ssh</Image>
+          <CommandLine condition="contains">ConnectTimeout=</CommandLine>
+          <CommandLine condition="contains">BatchMode=yes</CommandLine>
+          <CommandLine condition="contains">StrictHostKeyChecking=no</CommandLine>
+          <CommandLine condition="contains any">wget;curl</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1027.001,TechniqueName=Obfuscated Files or Information: Binary Padding" groupRelation="and">
+          <Image condition="is">/bin/dd</Image>
+          <CommandLine condition="contains all">dd;if=</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1033,TechniqueName=System Owner/User Discovery" groupRelation="or">
+          <CommandLine condition="contains">/var/run/utmp</CommandLine>
+          <CommandLine condition="contains">/var/log/btmp</CommandLine>
+          <CommandLine condition="contains">/var/log/wtmp</CommandLine>
+          <!-- Custom - GitHub: @djent- -->
+          <Image condition="is">/usr/bin/users</Image>
+          <Image condition="is">/usr/bin/who</Image>
+          <Image condition="is">/usr/bin/w</Image>
+          <!-- End Custom -->
+        </Rule>
+        <Rule name="TechniqueID=T1053.003,TechniqueName=Scheduled Task/Job: Cron" groupRelation="or">
+          <Image condition="end with">crontab</Image>
+        </Rule>
+        <Rule name="TechniqueID=T1059.004,TechniqueName=Command and Scripting Interpreter: Unix Shell" groupRelation="or">
+          <Image condition="end with">/bin/bash</Image>
+          <Image condition="end with">/bin/dash</Image>
+          <Image condition="end with">/bin/sh</Image>
+        </Rule>
+        <Rule name="TechniqueID=T1070.006,TechniqueName=Indicator Removal on Host: Timestomp" groupRelation="and">
+          <Image condition="is">/bin/touch</Image>
+          <CommandLine condition="contains any">-r;--reference;-t;--time</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1087.001,TechniqueName=Account Discovery: Local Account" groupRelation="or">
+          <CommandLine condition="contains">/etc/passwd</CommandLine>
+          <CommandLine condition="contains">/etc/sudoers</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1105,TechniqueName=Ingress Tool Transfer" groupRelation="or">
+          <Image condition="end with">wget</Image>
+          <Image condition="end with">curl</Image>
+          <Image condition="end with">ftpget</Image>
+          <Image condition="end with">tftp</Image>
+          <Image condition="end with">lwp-download</Image>
+          <!-- Custom: GitHub @djent- -->
+          <Image condition="end with">git</Image>
+          <Image condition="end with">sftp</Image>
+          <Image condition="end with">scp</Image>
+          <Image condition="end with">rsync</Image>
+          <CommandLine condition="contains all">whois;-h;-p;</CommandLine>
+          <!-- End Custom -->
+        </Rule>
+        <Rule name="TechniqueID=T1123,TechniqueName=Audio Capture" groupRelation="and">
+          <Image condition="contains">/bin/aplay</Image>
+          <CommandLine condition="contains">arecord</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1136.001,TechniqueName=Create Account: Local Account" groupRelation="or">
+          <Image condition="end with">useradd</Image>
+          <Image condition="end with">adduser</Image>
+        </Rule>
+        <Rule name="TechniqueID=T1203,TechniqueName=Exploitation for Client Execution" groupRelation="and">
+          <User condition="is">root</User>
+          <LogonId condition="is">0</LogonId>
+          <CurrentDirectory condition="is">/var/opt/microsoft/scx/tmp</CurrentDirectory>
+          <CommandLine condition="contains">/bin/sh</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1485,TechniqueName=Data Destruction" groupRelation="and">
+          <Image condition="is">/bin/dd</Image>
+          <CommandLine condition="contains all">dd;of=;if=</CommandLine>
+          <CommandLine condition="contains any">if=/dev/zero;if=/dev/null</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1505.003,TechniqueName=Server Software Component: Web Shell" groupRelation="and">
+          <Image condition="contains any">whoami;ifconfig;/usr/bin/ip;/bin/uname</Image>
+          <ParentImage condition="contains any">httpd;lighttpd;nginx;apache2;node;dash</ParentImage>
+        </Rule>
+        <Rule name="TechniqueID=T1543.002,TechniqueName=Create or Modify System Process: Systemd Service" groupRelation="or">
+          <Image condition="end with">systemd</Image>
+        </Rule>
+        <Rule name="TechniqueID=T1548.001,TechniqueName=Abuse Elevation Control Mechanism: Setuid and Setgid" groupRelation="or">
+          <Image condition="end with">chmod</Image>
+          <Image condition="end with">chown</Image>
+          <Image condition="end with">fchmod</Image>
+          <Image condition="end with">fchmodat</Image>
+          <Image condition="end with">fchown</Image>
+          <Image condition="end with">fchownat</Image>
+          <Image condition="end with">fremovexattr</Image>
+          <Image condition="end with">fsetxattr</Image>
+          <Image condition="end with">lchown</Image>
+          <Image condition="end with">lremovexattr</Image>
+          <Image condition="end with">lsetxattr</Image>
+          <Image condition="end with">removexattr</Image>
+          <Image condition="end with">setuid</Image>
+          <Image condition="end with">setgid</Image>
+          <Image condition="end with">setreuid</Image>
+          <Image condition="end with">setregid</Image>
+        </Rule>
+
+        <!-- Custom - GitHub: @djent- -->
+        <Rule name="TechniqueID=T1003.008,TechniqueName=/etc/passwd and /etc/shadow" groupRelation="or">
+          <CommandLine condition="contains any">/etc/passwd;/etc/shadow</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1003.008,TechniqueName=/etc/passwd and /etc/shadow" groupRelation="and">
+          <CurrentDirectory condition="is">/etc</CurrentDirectory>
+          <CommandLine condition="contains any">passwd;shadow</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1552.003,TechniqueName=Bash History" groupRelation="or">
+          <CommandLine condition="contains all">.bash_history;grep</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1552.003,TechniqueName=Zsh History" groupRelation="or">
+          <CommandLine condition="contains all">.zsh_history;grep</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1552.001,TechniqueName=Credentials In Files" groupRelation="or">
+          <CommandLine condition="contains all">grep;password</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1040,TechniqueName=Network Sniffing" groupRelation="or">
+          <Image condition="end with">tshark</Image>
+          <Image condition="end with">tcpdump</Image>
+        </Rule>
+        <Rule name="TechniqueID=T1552.004,TechniqueName=Private Keys" groupRelation="and">
+          <Image condition="end with">find</Image>
+          <CommandLine condition="contains">id_rsa</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1053.001,TechniqueName=At Task Scheduling" groupRelation="or">
+          <Image condition="end with">/at</Image>
+        </Rule>
+        <Rule name="TechniqueID=T1070.003,TechniqueName=Clear Command History" groupRelation="or">
+          <CommandLine condition="contains all">rm;.bash_history</CommandLine>
+          <CommandLine condition="is">echo "" > ~/.bash_history</CommandLine>
+          <CommandLine condition="is">cat /dev/null > ~/.bash_history</CommandLine>
+          <CommandLine condition="is">ls -sf /dev/null ~/.bash_history</CommandLine>
+          <CommandLine condition="is">truncate -s0 ~/.bash_history</CommandLine>
+          <CommandLine condition="is">echo 'set -o history' >> ~/.bashrc</CommandLine>
+          <CommandLine condition="contains all">rm;.zsh_history</CommandLine>
+          <CommandLine condition="is">echo "" > ~/.zsh_history</CommandLine>
+          <CommandLine condition="is">cat /dev/null > ~/.zsh_history</CommandLine>
+          <CommandLine condition="is">ls -sf /dev/null ~/.zsh_history</CommandLine>
+          <CommandLine condition="is">truncate -s0 ~/.zsh_history</CommandLine>
+          <CommandLine condition="is">echo 'set -o history' >> ~/.zshrc</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1070.002,TechniqueName=Clear System Logs #1" groupRelation="and">
+          <Image condition="end with">/rm</Image>
+          <CommandLine condition="begin with">rm -rf</CommandLine>
+          <CommandLine condition="contains any">/var/log;/var/spool;/var/audit</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1070.002,TechniqueName=Clear System Logs #2" groupRelation="and">
+          <CommandLine condition="begin with">echo 0></CommandLine>
+          <CommandLine condition="contains any">/var/log;/var/spool;/var/audit</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1027.004,TechniqueName=Compile After Delivery" groupRelation="and">
+          <CommandLine condition="contains any">gcc;clang</CommandLine>
+          <CommandLine condition="end with">&amp;&amp; ./a.out</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1040,TechniqueName=Deobfuscate/Decode Files or Information" groupRelation="or">
+          <CommandLine condition="contains all">python;b64decode</CommandLine>
+          <CommandLine condition="contains all">python;b64encode</CommandLine>
+          <CommandLine condition="contains all">perl;Base64</CommandLine>
+          <Image condition="end with">/base64</Image>
+          <Image condition="end with">/xxd</Image>
+        </Rule>
+        <Rule name="TechniqueID=T1562.004,TechniqueName=Disable or Modify System Firewall" groupRelation="or">
+          <CommandLine condition="is">ufw disable</CommandLine>
+          <CommandLine condition="is">systemctl stop ufw</CommandLine>
+          <CommandLine condition="is">ufw logging off</CommandLine>
+          <CommandLine condition="contains all">ufw;delete</CommandLine>
+          <CommandLine condition="contains all">ufw;allow</CommandLine>
+          <CommandLine condition="contains all">ufw;deny</CommandLine>
+          <CommandLine condition="contains all">echo; >> /etc/ufw/user.rules</CommandLine>
+          <CommandLine condition="contains all">sed;/etc/ufw/user.rules</CommandLine>
+          <CommandLine condition="contains all">echo; >> /etc/ufw/ufw.conf</CommandLine>
+          <CommandLine condition="contains all">sed;/etc/ufw/ufw.conf</CommandLine>
+          <CommandLine condition="contains all">echo; >> /etc/ufw/sysctl.conf</CommandLine>
+          <CommandLine condition="contains all">sed;/etc/ufw/sysctl.conf</CommandLine>
+          <CommandLine condition="contains all">echo; >> /etc/default/ufw</CommandLine>
+          <CommandLine condition="contains all">sed;/etc/default/ufw</CommandLine>
+          <CommandLine condition="is">tail /var/log/ufw.log</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1562.001,TechniqueName=Disable or Modify Tools #1" groupRelation="and">
+          <CommandLine condition="contains any">systemctl stop;systemctl disable;launchctl unload;chkconfig off</CommandLine>
+          <CommandLine condition="contains any">rsyslog;cbdaemon;falcon-sensor;carbonblack;sysmon</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1562.001,TechniqueName=Disable or Modify Tools #2" groupRelation="and">
+          <CommandLine condition="begin with">service</CommandLine>
+          <CommandLine condition="end with">stop</CommandLine>
+          <CommandLine condition="contains any">rsyslog;cbdaemon;falcon-sensor;carbonblack;sysmon</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1562.001,TechniqueName=Disable or Modify Tools #3" groupRelation="and">
+          <CommandLine condition="is">setenforce 0</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1553.004,TechniqueName=Install Root Certificate" groupRelation="and">
+          <CommandLine condition="contains any">cp;mv</CommandLine>
+          <CommandLine condition="contains any">/etc/pki/ca-trust;/usr/local/share/ca-certificates</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1036.003,TechniqueName=Rename System Utilities" groupRelation="and">
+          <Image condition="end with">/cp</Image>
+          <CommandLine condition="contains any">cp /bin/bash;cp /bin/sh;cp /bin/dash;cp /usr/bin/bash;cp /usr/bin/sh;cp /usr/bin/dash;cp /bin/zsh;cp /usr/bin/zsh</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1014,TechniqueName=Rootkit" groupRelation="or">
+          <Image condition="end with">/insmod</Image>
+          <Image condition="end with">/modprobe</Image>
+        </Rule>
+        <Rule name="TechniqueID=T1548.003,TechniqueName=Sudo and Sudo Caching" groupRelation="or">
+          <CommandLine condition="is">sudo -l</CommandLine>
+          <CommandLine condition="contains">/etc/sudoers</CommandLine>
+          <CommandLine condition="contains">visudo</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1497.001,TechniqueName=System Checks" groupRelation="or">
+          <Image condition="end with">/systemd-detect-virt</Image>
+          <CommandLine condition="contains all">dmidecode;grep;VMWare</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1486,TechniqueName=Data Encrypted for Impact" groupRelation="or">
+          <CommandLine condition="contains all">gpg;--yes;--passphrase-fd 0;-o;-c</CommandLine>
+          <CommandLine condition="contains all">7z a;-p;</CommandLine>
+          <CommandLine condition="contains all">ccencrypt</CommandLine>
+          <CommandLine condition="contains all">openssl;rsautl;-encrypt;-in;-out</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1217,TechniqueName=Browser Bookmark Discovery" groupRelation="or">
+          <CommandLine condition="contains all">mozilla;places.sqlite</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1135,TechniqueName=Network Share Discovery" groupRelation="or">
+          <CommandLine condition="begin with">df -aH</CommandLine>
+          <CommandLine condition="begin with">smbutil view</CommandLine>
+          <CommandLine condition="begin with">showmount</CommandLine>
+          <CommandLine condition="begin with">smbstatus --shares</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1057,TechniqueName=Process Discovery" groupRelation="or">
+          <Image condition="end with">/ps</Image>
+        </Rule>
+        <Rule name="TechniqueID=T1018,TechniqueName=Remot System Discovey" groupRelation="or">
+          <CommandLine condition="is">arp -a</CommandLine>
+          <CommandLine condition="contains all">ping;-c</CommandLine>
+          <CommandLine condition="is">ip neightbor show</CommandLine>
+          <CommandLine condition="is">ip route show</CommandLine>
+          <CommandLine condition="is">ip route</CommandLine>
+          <CommandLine condition="contains all">ip tcp_metrics;grep</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1049,TechniqueName=System Network Connections Discovery" groupRelation="or">
+          <Image condition="end with">/netstat</Image>
+          <CommandLine condition="is">who -a</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1098.004,TechniqueName=SSH Authorized Keys" groupRelation="or">
+          <CommandLine condition="contains">.ssh/authorized_keys</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1546.004,TechniqueName=Unix Shell Configuration Modification" groupRelation="or">
+          <CommandLine condition="contains any">.bash_profile;.bashrc;.zsh_profile;.zshrc</CommandLine>
+          <CommandLine condition="contains any">echo;vim;vi;sed;nano;ed</CommandLine>
+        </Rule>
+        <Rule name="TechniqueID=T1056.006,TechniqueName=Python" groupRelation="and">
+          <Image condition="contains">python</Image>
+          <CommandLine condition="contains any">os.system;import requests;import py_compile</CommandLine>
+        </Rule>
+        <!-- End Custom -->
+
+        <!-- Custom - GitHub: @lucky-luk3 -->
+        <Rule name="TechniqueID=T1592.002,TechniqueName=Gather Victim Host Information" groupRelation="or">
+			    <CommandLine condition="contains">-c command -v lastore-daemon &amp;&amp; echo true</CommandLine>
+			    <CommandLine condition="contains">-c cat /proc/cpuinfo</CommandLine>
+			    <CommandLine condition="contains">cat /proc/cpuinfo</CommandLine>
+    			<CommandLine condition="contains">-c command -v nmcli &amp;&amp; echo true</CommandLine>
+    			<CommandLine condition="contains">-c dpkg -l ntfs-3g | grep '^ii'</CommandLine>
+    			<CommandLine condition="contains">dpkg -l ntfs-3g</CommandLine>
+    			<CommandLine condition="contains">grep ^ii</CommandLine>
+    			<CommandLine condition="contains">dpkg-query --list -- ntfs-3g</CommandLine>
+    			<CommandLine condition="contains">-c grep ^ID= /etc/os-release</CommandLine>
+    			<CommandLine condition="contains">grep ^ID= /etc/os-release</CommandLine>
+    			<CommandLine condition="contains">-c cat /proc/sys/kernel/yama/ptrace_scope</CommandLine>
+    			<CommandLine condition="contains">cat /proc/sys/kernel/yama/ptrace_scope</CommandLine>
+    			<CommandLine condition="contains">-c test -x '/reptile/reptile_cmd' &amp;&amp; echo true</CommandLine>
+    			<CommandLine condition="contains">-c command -v bash &amp;&amp; echo true</CommandLine>
+    			<CommandLine condition="contains">-c test -x '/usr/local/Serv-U/Serv-U'</CommandLine>
+    			<CommandLine condition="contains">-c test -x '/usr/bin/staprun' &amp;&amp; echo true</CommandLine>
+    			<CommandLine condition="contains">/-c command -v /usr/bin/vmplayer &amp;&amp; echo true</CommandLine>
+    			<CommandLine condition="contains">-c test -d /opt/sysinfo &amp;&amp; echo true</CommandLine>
+    			<CommandLine condition="contains">-c id -un</CommandLine>
+        </Rule>
+        <!-- End Custom -->
+      
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- Custom - GitHub: @djent- -->
+    <RuleGroup name="ProcessCreate Exclude - lightdm" groupRelation="and">
+      <ProcessCreate onmatch="exclude">
+        <Rule name="lightdm user" groupRelation="or">
+          <User condition="is">lightdm</User>
+        </Rule>
+        <Rule name="lightdm commandline" groupRelation="or">
+          <CommandLine condition="is">systemd --user indicator-services-start</CommandLine>
+          <CommandLine condition="is">/bin/bash /usr/lib/systemd/user-environment-generators/90gpg-agent</CommandLine>
+          <CommandLine condition="is">/lib/systemd/systemd --user</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+    <RuleGroup name="ProcessCreate Exclude - _apt" groupRelation="and">
+      <ProcessCreate onmatch="exclude">
+        <Rule name="_apt user" groupRelation="or">
+          <User condition="is">_apt</User>
+        </Rule>
+        <Rule name="_apt commandline" groupRelation="or">
+          <CommandLine condition="begin with">chmod 700 /tmp/apt-key-gpghome</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /usr/bin/apt-key --quiet --readonly verify --status-fd 3 /tmp/apt.sig</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /usr/bin/apt-key --quiet --readonly verify --status-fd 3 /var/lib/apt/lists</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+    <RuleGroup name="ProcessCreate Exclude - root" groupRelation="and">
+      <ProcessCreate onmatch="exclude">
+        <Rule name="root user" groupRelation="or">
+          <User condition="is">root</User>
+          <Image condition="contains any">/usr/bin/dash;/usr/usr/bin/dash;/usr/bin/bash</Image>
+        </Rule>
+        <Rule name="root commandline" groupRelation="or">
+          <CommandLine condition="is">/bin/sh -c /usr/sbin/dpkg-preconfigure --apt || true</CommandLine>
+          <CommandLine condition="is">/bin/sh /var/lib/dpkg/info/man-db.postinst triggered /usr/share/man</CommandLine>
+          <CommandLine condition="is">/bin/sh /var/lib/dpkg/info/kali-menu.postinst triggered /usr/bin</CommandLine>
+          <CommandLine condition="is">/bin/sh -e /etc/NetworkManager/dispatcher.d/01-ifupdown eth0 dhcp4-change</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/lib/sysstat/debian-sa1 1 1</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/sbin/phpquery -V</CommandLine>
+          <CommandLine condition="is">/bin/sh -e /usr/lib/php/sessionclean</CommandLine>
+          <CommandLine condition="is">/bin/sh -c   [ -x /usr/lib/php/sessionclean ] &amp;&amp; if [ ! -d /run/systemd/system ]; then /usr/lib/php/sessionclean; fi</CommandLine>
+          <CommandLine condition="is">/bin/sh -c command -v debian-sa1 &gt; /dev/null &amp;&amp; debian-sa1 1 1</CommandLine>
+          <CommandLine condition="is">/bin/sh -c    cd / &amp;&amp; run-parts --report /etc/cron.hourly</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/bin/which gzip</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/bin/savelog -c 7 alternatives.tar</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/bin/savelog -c 7 dpkg.statoverride</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/bin/savelog -c 7 dpkg.diversions</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/bin/savelog -c 7 dpkg.status</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/bin/savelog -c 7 dpkg.arch</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/libexec/dpkg/dpkg-db-backup</CommandLine>
+          <CommandLine condition="is">sh -c type rpm 1&gt; /dev/null 2&gt; /dev/null</CommandLine>
+          <CommandLine condition="is">sh -c type dpkg-query 1&gt; /dev/null 2&gt; /dev/null</CommandLine>
+          <CommandLine condition="is">sh -c whiptail --version &gt;/dev/null 2&gt;&amp;1</CommandLine>
+          <CommandLine condition="is">sh -c stty -a 2&gt;/dev/null</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/lib/needrestart/apt-pinvoke</CommandLine>
+          <CommandLine condition="is">sh -c test -x /usr/lib/needrestart/apt-pinvoke &amp;&amp; /usr/lib/needrestart/apt-pinvoke || true</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/bin/which gtk-update-icon-cache</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/bin/which gtk-update-icon-cache-3.0</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/lib/needrestart/dpkg-status</CommandLine>
+          <CommandLine condition="is">sh -c (test -x /usr/lib/needrestart/dpkg-status &amp;&amp; /usr/lib/needrestart/dpkg-status || cat &gt; /dev/null)</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/bin/X :1 -seat seat0 -auth /var/run/lightdm/root/:1 -nolisten tcp vt8 -novtswitch</CommandLine>
+          <CommandLine condition="is">/bin/sh -e /lib/udev/ifupdown-hotplug</CommandLine>
+          <CommandLine condition="begin with">/bin/sh -c /usr/sbin/ethtool -i $1 |/usr/bin/sed -n s/^driver:\ //p -- </CommandLine>
+          <CommandLine condition="is">bash /usr/local/bin/docker-entrypoint.sh postgres</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /etc/network/if-up.d/</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/sbin/invoke-rc.d --quiet miredo status</CommandLine>
+          <CommandLine condition="begin with">/bin/sh -e /etc/NetworkManager/dispatcher.d/01-ifupdown</CommandLine>
+          <CommandLine condition="is">bash -c /usr/bin/vmhgfs-fuse --enabled</CommandLine>
+          <CommandLine condition="is">bash -c /usr/bin/vmhgfs-fuse .host:/ /mnt/hgfs -o subtype=vmhgfs-fuse,allow_other</CommandLine>
+
+          <!-- apt update stuff, in addition to some above-->
+          <CommandLine condition="begin with">/bin/sh /usr/bin/dpkg-maintscript-helper</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /usr/share/initramfs-tools/scripts/</CommandLine>
+          <CommandLine condition="begin with">/bin/sh -e/usr/share/initramfs-tools/scripts/</CommandLine>
+          <CommandLine condition="begin with">sh -n /usr/share/initramfs-tools/scripts/</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /usr/share/initramfs-tools/hooks/</CommandLine>
+          <CommandLine condition="begin with">/bin/bash /usr/bin/ldd /bin/</CommandLine>
+          <CommandLine condition="begin with">/bin/bash /usr/bin/ldd /usr/bin/</CommandLine>
+          <CommandLine condition="begin with">/bin/bash /usr/bin/ldd /sbin/</CommandLine>
+          <CommandLine condition="begin with">/bin/bash /usr/bin/ldd /usr/sbin/</CommandLine>
+          <CommandLine condition="begin with">/bin/bash /usr/bin/ldd /lib/</CommandLine>
+          <CommandLine condition="begin with">/bin/bash /usr/bin/ldd /usr/lib/</CommandLine>
+          <!-- <CommandLine condition="begin with">grep -qs ^root: /var/tmp/mkinitramfs_</CommandLine> --> <!-- Won't work - image is grep -->
+          <CommandLine condition="begin with">/bin/bash /usr/sbin/plymouth-set-default-theme</CommandLine>
+          <CommandLine condition="begin with">/bin/bash /usr/bin/setupcon --setup-dir /var/tmp/mkinitramfs_</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /usr/sbin/mkinitramfs -o /boot/initrd.img</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/sbin/update-initramfs -u</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /var/lib/dpkg/info/</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /var/lib/dpkg/tmp.</CommandLine>
+          <CommandLine condition="is">/bin/sh -c mkdir -p /run/lock /var/lock; touch /var/lock/kali-menu</CommandLine>
+          <CommandLine condition="begin with">sh -c systemctl --system is-enabled --</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /usr/lib/systemd/system-generators</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /usr/bin/which</CommandLine>
+          <CommandLine condition="begin with">/bin/sh -c 'vmware-vmblock-fuse' '/run/vmblock-fuse' '-o' 'rw,subtype=vmware-vmblock,default_permissions,all_ow_other,dev,suid'</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /etc/grub.d/</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /usr/lib/os-probes/</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/bin/os-prober</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /usr/bin/fgrep -vx /boot/vmlinux-</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/sbin/grub-mkconfig -o /boot/grub/grub.cfg</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/sbin/update-grub</CommandLine>
+          <CommandLine condition="is">/bin/sh -c python3.9 -c 'import imp; print(imp.get_magic())'</CommandLine>
+          <CommandLine condition="is">/bin/sh -c python3.9 -c 'import imp; print(imp.get_tag())'</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /usr/sbin/update-icon-caches /usr/share/icons</CommandLine>
+          <CommandLine condition="is">sh -c /usr/bin/lsb_release -sd 2>/dev/null</CommandLine>
+          <CommandLine condition="is">sh -c /usr/bin/lsb_release -si 2>/dev/null</CommandLine>
+          <CommandLine condition="is">sh -c /usr/bin/lsb_release -sr 2>/dev/null</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/lib/udev/hwclock-set /dev/rtc0</CommandLine>
+          <CommandLine condition="begin with">/bin/sh /usr/sbin/invoke-rc.d --skip-systemd-native open-vm-tools restart</CommandLine>
+          <CommandLine condition="is">sh -c [ ! -x /usr/bin/debtags ] || debtags update || true</CommandLine>
+          <CommandLine condition="is">sh -c if /usr/bin/test -w /var/lib/command-not-found/ -a -e /usr/lib/cnf-update-db; then /usr/lib/cnf-update-db > /dev/null; fi</CommandLine>
+
+          <!-- <CommandLine condition="is"></CommandLine> -->
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+    <RuleGroup name="ProcessCreate Exclude - kali" groupRelation="and">
+      <ProcessCreate onmatch="exclude">
+        <Rule name="kali user" groupRelation="or">
+          <User condition="is">kali</User>
+        </Rule>
+        <Rule name="kali commandline" groupRelation="or">
+          <CommandLine condition="is">/bin/sh /usr/share/kali-themes/xfce4-panel-genmon-vpnip.sh</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/bin/xflock4</CommandLine>
+          <CommandLine condition="is">/bin/sh /usr/bin/xfce4-popup-whiskermenu</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup>
+    <!-- This user I think corresponds to the internal docker container user. I was using GhostWriter which has a postgres container >
+    <RuleGroup name="ProcessCreate Exclude - systemd-coredump" groupRelation="and">
+      <ProcessCreate onmatch="exclude">
+        <Rule name="systemd-coredump user" groupRelation="or">
+          <User condition="is">systemd-coredump</User>
+        </Rule>
+        <Rule name="systemd-coredump commandline" groupRelation="or">
+          <CommandLine condition="is">/bin/bash /usr/bin/ldd /usr/lib/postgresql/11/bin/psql</CommandLine>
+          <CommandLine condition="is">/bin/sh -c exec "/usr/lib/postgresql/11/bin/postgres" -D "/var/lib/postgresql/data" -c listen_addresses= -p 5432  &lt; "/dev/null" 2&gt;&amp;1</CommandLine>
+          <CommandLine condition="begin with">sh -c "/usr/lib/postgresql/11/bin/postgres"</CommandLine>
+          <CommandLine condition="is">sh -c locale -a</CommandLine>
+          <CommandLine condition="is">chmod 775 /var/run/postgresql</CommandLine>
+          <CommandLine condition="is">chmod 700 /var/lib/postgresql/data</CommandLine>
+          <CommandLine condition="is">bash /usr/local/bin/docker-entrypoint.sh postgres</CommandLine>
+        </Rule>
+      </ProcessCreate>
+    </RuleGroup> -->
+    <!-- End Custom -->
+
+    <!-- Event ID 3 == NetworkConnect Detected -->
+    <RuleGroup name="" groupRelation="or">
+      <NetworkConnect onmatch="include">
+        <Rule name="TechniqueID=T1105,TechniqueName=Ingress Tool Transfer" groupRelation="or">
+          <Image condition="end with">wget</Image>
+          <Image condition="end with">curl</Image>
+          <Image condition="end with">ftpget</Image>
+          <Image condition="end with">tftp</Image>
+          <Image condition="end with">lwp-download</Image>
+          <!-- Custom: GitHub @djent- -->
+          <Image condition="end with">git</Image> <!-- Doesn't work -->
+          <Image condition="end with">sftp</Image>
+          <Image condition="end with">scp</Image>
+          <Image condition="end with">rsync</Image>
+          <CommandLine condition="contains all">whois;-h;-p;</CommandLine>
+          <!-- End Custom -->
+        </Rule>
+        
+        <!-- Custom - GitHub: @hartescout -->
+        <Rule name="TechniqueID=T1046,TechniqueName=Network Services Scanning" groupRelation="or">
+          <Image condition="end with">/netcat</Image> <!-- Doesn't work -->
+          <Image condition="end with">/nc</Image> <!-- Doesn't work -->
+          <Image condition="end with">/ncat</Image> <!-- Custom - GitHub: @djent- -->
+          <Image condition="end with">/telnet</Image> <!-- Doesn't work -->
+          <Image condition="end with">/nmap</Image>
+        </Rule>
+        <!-- End Custom -->
+      
+      </NetworkConnect>
+    </RuleGroup>
+    <!-- Event ID 5 == ProcessTerminate -->
+    <RuleGroup name="" groupRelation="or">
+      <ProcessTerminate onmatch="include" />
+    </RuleGroup>
+    <!-- Event ID 9 == RawAccessRead -->
+    <RuleGroup name="" groupRelation="or">
+      <RawAccessRead onmatch="include" />
+    </RuleGroup>
+    <!-- Event ID 11 == FileCreate -->
+    <RuleGroup name="" groupRelation="or">
+      <FileCreate onmatch="include">
+        <Rule name="TechniqueID=T1037,TechniqueName=Boot or Logon Initialization Scripts" groupRelation="or">
+          <TargetFilename condition="begin with">/etc/init/</TargetFilename>
+          <TargetFilename condition="begin with">/etc/init.d/</TargetFilename>
+          <TargetFilename condition="begin with">/etc/rc.d/</TargetFilename>
+        </Rule>
+        <Rule name="TechniqueID=T1053.003,TechniqueName=Scheduled Task/Job: Cron" groupRelation="or">
+          <TargetFilename condition="is">/etc/cron.allow</TargetFilename>
+          <TargetFilename condition="is">/etc/cron.deny</TargetFilename>
+          <TargetFilename condition="is">/etc/crontab</TargetFilename>
+          <TargetFilename condition="begin with">/etc/cron.d/</TargetFilename>
+          <TargetFilename condition="begin with">/etc/cron.daily/</TargetFilename>
+          <TargetFilename condition="begin with">/etc/cron.hourly/</TargetFilename>
+          <TargetFilename condition="begin with">/etc/cron.monthly/</TargetFilename>
+          <TargetFilename condition="begin with">/etc/cron.weekly/</TargetFilename>
+          <TargetFilename condition="begin with">/var/spool/cron/crontabs/</TargetFilename>
+        </Rule>
+        <Rule name="TechniqueID=T1105,TechniqueName=Ingress Tool Transfer" groupRelation="or">
+          <Image condition="end with">wget</Image>
+          <Image condition="end with">curl</Image>
+          <Image condition="end with">ftpget</Image>
+          <Image condition="end with">tftp</Image>
+          <Image condition="end with">lwp-download</Image>
+          <!-- Custom: GitHub @djent- -->
+          <Image condition="end with">sftp</Image>
+          <Image condition="end with">scp</Image>
+          <Image condition="end with">rsync</Image>
+          <CommandLine condition="contains all">whois;-h;-p;</CommandLine>
+          <!-- FileCreate on git would be very noisy. Will need to see about NetworkConnect
+          <Image condition="end with">git</Image> -->
+          <!-- End Custom -->
+        </Rule>
+        <Rule name="TechniqueID=T1543.002,TechniqueName=Create or Modify System Process: Systemd Service" groupRelation="or">
+          <TargetFilename condition="begin with">/etc/systemd/system</TargetFilename>
+          <TargetFilename condition="begin with">/usr/lib/systemd/system</TargetFilename>
+          <TargetFilename condition="begin with">/run/systemd/system/</TargetFilename>
+          <TargetFilename condition="contains">/systemd/user/</TargetFilename>
+        </Rule>
+      </FileCreate>
+    </RuleGroup>
+    <!--Event ID 23 == FileDelete -->
+    <RuleGroup name="" groupRelation="or">
+      <FileDelete onmatch="include" />
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>
+<!-- vim: ts=2 sts=2 expandtab
+-->
